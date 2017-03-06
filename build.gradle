@@ -1,0 +1,51 @@
+// Top-level build file where you can add configuration options common to all sub-projects/modules.
+
+buildscript {
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:2.2.3'
+
+        // NOTE: Do not place your application dependencies here; they belong
+        // in the individual module build.gradle files
+    }
+}
+
+allprojects {
+    repositories {
+        jcenter()
+    }
+}
+
+task clean(type: Delete) {
+    delete rootProject.buildDir
+}
+
+
+
+ext.versions = [
+        version_code     : 1,
+        version_name     : "1.0.0",
+
+        minSDK           : 11,
+        targetSDK        : 21,
+        compileVersion   : 23,
+        buildToolsVersion: "24.0.2",
+]
+
+ext.libsVersion = [
+        supportAnnotations : "24.2.0",
+        appcompat          : "24.2.0",
+        supportV4          : "24.2.0",
+        supportRecyclerview: "24.2.0",
+        supportDesign      : "24.2.0",
+]
+
+ext.libraries = [
+        supportAnnotations : "com.android.support:support-annotations:$libsVersion.supportAnnotations",
+        appcompat          : "com.android.support:appcompat-v7:$libsVersion.appcompat",
+        supportV4          : "com.android.support:support-v4:$libsVersion.supportV4",
+        supportRecyclerview: "com.android.support:recyclerview-v7:$libsVersion.supportRecyclerview",
+        supportDesign      : "com.android.support:design:$libsVersion.supportDesign",
+]

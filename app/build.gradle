@@ -1,0 +1,57 @@
+apply plugin: 'com.android.application'
+
+android {
+    compileSdkVersion rootProject.ext.versions.compileVersion
+    buildToolsVersion rootProject.ext.versions.buildToolsVersion
+    defaultConfig {
+        applicationId "org.uuyi.youyi"
+        minSdkVersion rootProject.ext.versions.minSDK
+        targetSdkVersion rootProject.ext.versions.targetSDK
+        versionCode 1
+        versionName "1.0"
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+    }
+
+    signingConfigs {
+        release {
+            keyAlias 'uugy'
+            keyPassword '9dCUfJ21&YHsBvDn'
+            storeFile file('LGNcu2I0Q2VlENRw.jks')
+            storePassword '*DFjJ1H5R8$VBS!g'
+        }
+        myConfig {
+            storeFile file("wPIElOBWHzTqyIil.keystore")
+            storePassword "wPIElOBWHzTqyIil"
+            keyAlias "touchspriteandroid"
+            keyPassword "wPIElOBWHzTqyIil"
+        }
+    }
+    buildTypes {
+        release {
+            minifyEnabled true
+            signingConfig signingConfigs.release
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+        debug {
+            minifyEnabled true
+            signingConfig signingConfigs.release
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+dependencies {
+    compile fileTree(include: ['*.jar'], dir: 'libs')
+    androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
+        exclude group: 'com.android.support', module: 'support-annotations'
+    })
+    compile rootProject.ext.libraries.appcompat
+    testCompile 'junit:junit:4.12'
+    compile 'com.squareup.okhttp3:logging-interceptor:3.4.1'
+    compile 'com.squareup.okio:okio:1.11.0'
+    compile 'com.lzy.net:okgo:+'
+    compile 'com.lzy.net:okrx:+'
+    compile 'com.lzy.net:okserver:+'
+    compile 'com.android.support:multidex:1.0.1'
+    compile project(':shareLib')
+}
