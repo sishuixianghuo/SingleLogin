@@ -1,4 +1,4 @@
-package test.test;
+package www.leg.com.singlelogin.download;
 
 import java.lang.ref.SoftReference;
 import java.util.WeakHashMap;

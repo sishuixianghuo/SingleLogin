@@ -7,6 +7,7 @@ import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.sina.weibo.sdk.api.ImageObject;
@@ -26,6 +27,7 @@ import com.tencent.mm.sdk.modelbase.BaseResp;
 
 import java.util.Locale;
 
+import okhttp3.OkHttpClient;
 import rx.Subscription;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Action1;
@@ -36,6 +38,8 @@ import www.leg.com.sharelib.bean.QQUserInfo;
 import www.leg.com.sharelib.bean.SinaUserInfo;
 import www.leg.com.sharelib.bean.WxUserInfo;
 import www.leg.com.sharelib.thirdparty.ThirdPartUtils;
+import www.leg.com.singlelogin.download.DownLoadInfo;
+import www.leg.com.singlelogin.download.OkHttpUitls;
 
 import static android.graphics.BitmapFactory.decodeResource;
 
@@ -47,6 +51,11 @@ public class MainActivity extends AppCompatActivity implements IThirdParty, IWei
     private PreferenceManager.OnActivityResultListener OnActivityResultListener;
     IWeiboShareAPI mWeiboShareAPI;
 
+    String url = "http://repo1.maven.org/maven2/com/squareup/okhttp3/okhttp/3.6.0/okhttp-3.6.0.jar";
+    String filePath = "/mnt/sdcard/okhttp/okhttp.jar";
+
+    TextView index;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -57,6 +66,8 @@ public class MainActivity extends AppCompatActivity implements IThirdParty, IWei
         // 注册
         mWeiboShareAPI.registerApp();
         mWeiboShareAPI.handleWeiboResponse(getIntent(), this);
+        index = (TextView) findViewById(R.id.index);
+
     }
 
     @Override
@@ -387,5 +398,32 @@ public class MainActivity extends AppCompatActivity implements IThirdParty, IWei
         request.transaction = String.valueOf(System.currentTimeMillis());
         request.multiMessage = weiboMessage;
         mWeiboShareAPI.sendRequest(MainActivity.this, request);
+    }
+
+
+    public void cancel(View w) {
+        OkHttpClient client = OkHttpUitls.getClient();
+        client.dispatcher().cancelAll();
+
+    }
+
+    public void start(View w) {
+        OkHttpClient client = OkHttpUitls.getClient();
+        Subscription subscription = OkHttpUitls.downFileNew(url, filePath, client)
+                .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Action1<DownLoadInfo>() {
+                    @Override
+                    public void call(DownLoadInfo info) {
+                        index.setText(String.format(Locale.getDefault(), "%d/%d", info.sum, info.total));
+                    }
+                }, new Action1<Throwable>() {
+                    @Override
+                    public void call(Throwable throwable) {
+                        Log.e("OkHttpUitls", "Throwable" + throwable.getMessage());
+
+                    }
+                });
+        mCompositeSubscription.add(subscription);
+
     }
 }
