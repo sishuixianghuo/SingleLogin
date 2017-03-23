@@ -2,6 +2,9 @@ package www.leg.com.singlelogin.download;
 
 import android.util.Log;
 
+import com.lzy.okgo.OkGo;
+import com.lzy.okgo.request.GetRequest;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -57,6 +60,18 @@ public class OkHttpUitls {
                 return re.body().contentLength();
             }
             re.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+    public static long getFileLength(String url) {
+        try {
+            Response response = OkGo.head(url).getCall().execute();
+            if (response.isSuccessful()) {
+                return response.body().contentLength();
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -124,6 +139,70 @@ public class OkHttpUitls {
                 });
             }
         });
+    }
+
+    public static Observable<DownLoadInfo> downFileNew(final String url, final String path) {
+        return Observable.create(new Observable.OnSubscribe<DownLoadInfo>() {
+
+            @Override
+            public void call(final Subscriber<? super DownLoadInfo> subscriber) {
+                GetRequest request = OkGo.get(url).tag(url);
+//                Request request = new Request.Builder().url(url).tag(url).build();
+                long length = getFileLength(url);// 文件的总长度
+                final File file = new File(path);
+                final DownLoadInfo info = new DownLoadInfo();
+                info.total = length;
+                if (file.exists()) {
+                    Log.e("OkHttpUitls", String.format(Locale.getDefault(), "File length = %d   length = %d", file.length(), length));
+                    if (length == file.length()) {
+                        // 下载完成
+                        info.sum = length;
+                        subscriber.onNext(info);
+                        subscriber.onCompleted();
+                        return;
+                    }
+//                    request = request.newBuilder()
+//                            .addHeader("RANGE", "bytes=" + file.length() + "-" + length).build();
+                    request.headers("RANGE", "bytes=" + file.length() + "-" + length);
+
+                }
+                Call call = request.getCall();
+                // 添加到队列
+                DownLoadManager.getManager().put(url, call);
+                call.enqueue(new Callback() {
+                    @Override
+                    public void onFailure(Call call, IOException exc) {
+                        subscriber.onError(exc);
+                    }
+
+                    @Override
+                    public void onResponse(Call call, Response response) throws IOException {
+                        long length = response.body().contentLength();
+                        Log.e("OkHttpUitls", String.format(Locale.getDefault(), "length = %d", length));
+                        InputStream is = response.body().byteStream();
+                        FileOutputStream fos = new FileOutputStream(file, file.exists());
+                        if (file.exists()) {
+                            info.sum = file.length();
+                        }
+                        byte[] buff = new byte[4 * 1024];
+                        int len;
+                        while ((len = is.read(buff)) != -1) {
+                            fos.write(buff, 0, len);
+                            info.sum += len;
+                            Log.e("OkHttpUitls", String.format(Locale.getDefault(), "sum = %d   isDisposed = %b", info.sum, subscriber.isUnsubscribed()));
+                            if (subscriber.isUnsubscribed()) {
+                                call.cancel();
+                            }
+                            subscriber.onNext(info);
+                        }
+                        if (null != fos) {
+                            fos.close();
+                        }
+                    }
+                });
+            }
+        });
+
     }
 
 //    private static Observable<DownLoadInfo> downFile(String url, String path, OkHttpClient client) {
